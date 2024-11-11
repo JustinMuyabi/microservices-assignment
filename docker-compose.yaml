@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: users_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    environment:
+      JWT_SECRET: '10'
+      NODE_ENV: development
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    networks:
+      - backend
+
+  users-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://admin:admin123@postgres:5432/users_db
+      NODE_ENV: development
+    depends_on:
+      - postgres
+    ports:
+      - "4000:4000"
+      - "4001:4001"
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth-service
+      - users-service
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  postgres_data:
