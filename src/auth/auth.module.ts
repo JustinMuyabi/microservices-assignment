@@ -10,7 +10,8 @@ import {JwtModule} from "@nestjs/jwt";
       {
         name: 'USER_SERVICE',
         transport: Transport.TCP,
-        options: { host: "::1", port: 4001 }
+        // options: { host: "::1", port: 4001 }
+        options: { host: "host.docker.internal", port: 4001 }
       }
     ]),
       JwtModule.register({secretOrPrivateKey: '10', signOptions: {expiresIn: '10m'}})

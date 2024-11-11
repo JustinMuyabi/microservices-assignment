@@ -4,7 +4,7 @@ import {SignInAuthDto} from './dto/sign-in-auth.dto';
 import {UpdateAuthDto} from './dto/update-auth.dto';
 import {MessagePattern} from "@nestjs/microservices";
 
-@Controller('auth')
+@Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
