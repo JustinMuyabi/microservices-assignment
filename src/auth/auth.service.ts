@@ -1,20 +1,26 @@
-import {Inject, Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
 import { SignInAuthDto } from './dto/sign-in-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import {ClientProxy} from "@nestjs/microservices";
+import {JwtService} from "@nestjs/jwt";
 
 @Injectable()
 export class AuthService {
   constructor(
       @Inject('USER_SERVICE') private readonly UserService: ClientProxy,
+      private readonly jwtService: JwtService,
   ) {}
 
   async signIn(signInAuthDto: SignInAuthDto) {
     let responseObservable = this.UserService.send({ cmd: 'user-check'}, {...signInAuthDto});
     const [response] = await Promise.all([responseObservable.toPromise()]);
-    console.log(response)
+    if (response === null) throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
 
-    return 'This action adds a new auth';
+    if (response.status === 'inactive') throw new HttpException('User is inactive', HttpStatus.UNAUTHORIZED);
+
+    const payload = { sub: response.user_id, username: response.email, role: response.role.name };
+    const access_token =  await this.jwtService.signAsync(payload)
+    return { access_token };
   }
 
   findAll() {
@@ -31,5 +37,13 @@ export class AuthService {
 
   remove(id: number) {
     return `This action removes a #${id} auth`;
+  }
+
+  tokenVerify(token: string) {
+    try {
+      return this.jwtService.verify(token, { secret: '10' });
+    }catch (error) {
+      return null;
+    }
   }
 }

@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { SignInAuthDto } from './dto/sign-in-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import {Body, Controller, Delete, Get, Param, Patch, Post} from '@nestjs/common';
+import {AuthService} from './auth.service';
+import {SignInAuthDto} from './dto/sign-in-auth.dto';
+import {UpdateAuthDto} from './dto/update-auth.dto';
+import {MessagePattern} from "@nestjs/microservices";
 
 @Controller('auth')
 export class AuthController {
@@ -30,5 +31,10 @@ export class AuthController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.authService.remove(+id);
+  }
+
+  @MessagePattern({ cmd: 'verify-token'})
+  async tokenVerify(payload: { token: string }) {
+    return await this.authService.tokenVerify(payload.token)
   }
 }

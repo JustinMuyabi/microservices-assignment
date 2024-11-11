@@ -9,9 +9,11 @@ async function bootstrap() {
   app.connectMicroservice({
     transport: Transport.TCP,
     options: {
+      host: '0.0.0.0',
       port: 3001,
     }
   })
+  await app.startAllMicroservices();
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap().then(() => console.log('Auth server started'));
