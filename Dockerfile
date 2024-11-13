@@ -2,22 +2,18 @@
 
 ARG NODE_VERSION=20.12.2
 
-FROM node:${NODE_VERSION}-alpine as base
+FROM node:${NODE_VERSION}-alpine AS base
 
 WORKDIR /usr/src/app
 
-################################################################################
-# Stage for installing production dependencies.
-FROM base as deps
+FROM base AS deps
 
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
     --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev
 
-################################################################################
-# Stage for building the application.
-FROM deps as build
+FROM deps AS build
 
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
@@ -28,11 +24,9 @@ COPY . .
 
 RUN npm run build
 
-################################################################################
-# Final stage for running the application
-FROM base as final
+FROM base AS final
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 COPY package.json .
 
@@ -44,7 +38,6 @@ RUN chmod +x ./entrypoint.sh
 
 EXPOSE 3000 3001
 
-# Switch to node user after all operations that require root
 USER node
 
 ENTRYPOINT ["./entrypoint.sh"]
